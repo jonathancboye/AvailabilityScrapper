@@ -15,9 +15,9 @@ const checkerFrequency = 30000; // in milliseconds
 const dontShowBrowser = true;
 //////////////////////////////////
 
-const emailSender = process.env.EMAILSENDER
-const emailReciever = process.env.EMAILRECIEVER
-const emailPassword = process.env.EMAILPASSWORD
+const emailSender = process.env.EMAILSENDER;
+const emailReciever = process.env.EMAILRECIEVER;
+const emailPassword = process.env.EMAILPASSWORD;
 
 
 (async () => {
