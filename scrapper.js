@@ -21,28 +21,55 @@ const emailPassword = process.env.EMAILPASSWORD;
 
 
 (async () => {
-    const browser = await puppeteer.launch({"headless" : dontShowBrowser});
+    const browser = await puppeteer.launch({ "headless": dontShowBrowser });
     const page = await browser.newPage();
 
-    await pollStatus(page);
+    await checkAllSitesAndSendEmailWhenAvailable(
+        page, checkerFrequency, sites,
+        emailSender, emailReciever, emailPassword
+    );
     await browser.close();
 })();
 
-async function pollStatus(page) {
-    let siteGen = siteGenerator(sites);
+async function checkAllSitesAndSendEmailWhenAvailable(
+    page, frequency, sites,
+    emailSender, emailReciever, emailPassword
+) {
+    let sitesToCheck = getSitesToCheck(sites);
 
     while (true) {
-        let siteToCheck = siteGen.next().value;
-        await page.goto(siteToCheck);
-        let status = await page.evaluate(availabiltyQuery);
-        console.log(status);
+        let site = sitesToCheck.next().value;
+        if (await visitPage(page, site)) {
+            let status = await checkStatus(page, availabiltyQuery);
 
-        if (status !== unavailable) {
-            sendEmail(siteToCheck);
-            break;
-        }
+            if (status !== unavailable) {
+                sendEmail(site, emailSender, emailReciever, emailPassword);
+                break;
+            }
+        };
 
-        await sleep(checkerFrequency);
+        await sleep(frequency);
+    }
+}
+
+async function checkStatus(page, query) {
+    let status = await page.evaluate(query);
+    console.log(status);
+    return status;
+}
+
+async function visitPage(page, site) {
+    try {
+        await page.goto(site, {
+            waitUntil: 'networkidle2',
+            timeout: 30000
+        });
+
+        return true;
+    }
+    catch {
+        console.log(`Failed to visit ${site}, trying again`);
+        return false;
     }
 }
 
@@ -50,29 +77,20 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function* siteGenerator(sites) {
+function* getSitesToCheck(sites) {
     let currentSite = 0;
     while (true) {
         yield sites[currentSite++ % sites.length];
     }
 }
 
-function sendEmail(site) {
-    var transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: emailSender,
-            pass: emailPassword
-        }
-    });
-    
-    var mailOptions = {
-        from: emailSender,
-        to: emailReciever,
-        subject: 'Web Scrapper: Something is available',
-        text: `Something is available: ${site}`
-    };
-    
+function sendEmail(site, emailSender, emailReciever, emailPassword) {
+    let mailTransporter = getGmailTransporter(emailSender, emailPassword);
+    let mailOptions = getMailOptions(emailSender, emailReciever, site);
+    sendMail(mailTransporter, mailOptions);
+}
+
+function sendMail(transporter, mailOptions) {
     transporter.sendMail(mailOptions, function (error, info) {
         if (error) {
             console.log(error);
@@ -80,4 +98,23 @@ function sendEmail(site) {
             console.log('Email sent: ' + info.response);
         }
     });
+}
+
+function getGmailTransporter(emailSender, emailPassword) {
+    return nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: emailSender,
+            pass: emailPassword
+        }
+    });
+}
+
+function getMailOptions(emailSender, emailReciever, site) {
+    return {
+        from: emailSender,
+        to: emailReciever,
+        subject: 'Web Scrapper: Something is available',
+        text: `Something is available: ${site}`
+    };
 }
