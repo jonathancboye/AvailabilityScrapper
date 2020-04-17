@@ -71,7 +71,7 @@ async function visitPage(page, site) {
         return true;
     }
     catch {
-        console.log(`Failed to visit ${site}, trying again`);
+        console.log(`Failed to visit ${site}`);
         return false;
     }
 }
