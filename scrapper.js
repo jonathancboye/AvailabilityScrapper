@@ -7,7 +7,10 @@ const process = require('process');
 const sites = [
     "https://www.verabradley.com/us/product/Cotton-Face-Mask-(NonMedical)/28001-28001063",
     "https://www.verabradley.com/us/product/Cotton-Face-Mask-(NonMedical)/28001-28001N52",
-    "https://www.verabradley.com/us/product/Cotton-Face-Mask-(NonMedical)/28001-28001010"
+    "https://www.verabradley.com/us/product/Cotton-Face-Mask-(NonMedical)/28001-28001010",
+    "https://www.verabradley.com/us/product/Cotton-Face-Mask-(NonMedical)/28001-28001K32",
+    "https://www.verabradley.com/us/product/Cotton-Face-Mask-(NonMedical)/28001-28001111", 
+    "https://www.verabradley.com/us/product/Cotton-Face-Mask-(NonMedical)/28001-28001052"
 ];
 const unavailable = "Restocking Soon";
 const availabiltyQuery = 'document.querySelector(".availability-message.js-availability-status").textContent';
